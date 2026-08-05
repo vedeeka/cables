@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import Sidebar from "../components/Sidebar";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 interface DashboardData {
   status: string;
@@ -11,8 +12,6 @@ interface DashboardData {
     name: string;
     email: string;
     picture?: string;
-    access_token?: string;
-    refresh_token?: string;
   };
   latest_email: string;
   latest_calendar: string;
@@ -27,6 +26,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   useEffect(() => {
     loadDashboard();
@@ -35,7 +35,7 @@ export default function Dashboard() {
   async function loadDashboard() {
     try {
       const res = await fetch(`${API_BASE}/api/dashboard`, {
-        credentials: "include", // Required to pass the session cookie
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -69,173 +69,361 @@ export default function Dashboard() {
     }
   }
 
-  if (loading) return <p style={styles.message}>Loading workspace data...</p>;
-  if (error) return <p style={styles.error}>{error}</p>;
+  if (loading) {
+    return (
+      <div style={styles.centerMsg}>
+        <p style={{ color: "#0f172a", fontSize: "16px", fontWeight: 600 }}>
+          Loading workspace data...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.centerMsg}>
+        <p style={{ color: "#dc2626", fontSize: "16px", fontWeight: 600 }}>
+          {error}
+        </p>
+      </div>
+    );
+  }
+
   if (!data) return null;
 
   return (
-    <main style={styles.container}>
-      <header style={styles.header}>
-        <h1>Enterprise AI OS Dashboard</h1>
-        <button onClick={logout} style={styles.logoutButton}>
-          Logout
-        </button>
-      </header>
+    <div style={styles.container}>
+      {/* Imported Sidebar Component */}
+      <Sidebar
+        user={data.user}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onLogout={logout}
+      />
 
-      {/* User Information */}
-      <section style={styles.section}>
-        <h2>User Profile</h2>
-        <div style={styles.profileBox}>
-          {data.user.picture && (
-            <img 
-              src={data.user.picture} 
-              alt={data.user.name} 
-              style={styles.avatar} 
-            />
-          )}
+      {/* Main View Container */}
+      <main style={styles.main}>
+        {/* Header Bar */}
+        <header style={styles.header}>
           <div>
-            <p><strong>Name:</strong> {data.user.name}</p>
-            <p><strong>Email:</strong> {data.user.email}</p>
-            <p><strong>Subject ID:</strong> {data.user.sub}</p>
+            <h1 style={styles.headerTitle}>Dashboard</h1>
+            <p style={styles.headerSubtitle}>
+              Welcome back, <strong style={{ color: "#0f172a" }}>{data.user.name}</strong>
+            </p>
+          </div>
+
+          <div style={styles.headerRight}>
+            <div style={styles.statusBadge}>
+              <span style={styles.statusDot} />
+              {data.status.toUpperCase()}
+            </div>
+          </div>
+        </header>
+
+        {/* Top Metric Cards */}
+        <div style={styles.cardsGrid}>
+          <div style={styles.card}>
+            <span style={styles.cardLabel}>Documents</span>
+            <h2 style={styles.cardValue}>{data.documents_synced}</h2>
+          </div>
+
+          <div style={styles.card}>
+            <span style={styles.cardLabel}>Knowledge Chunks</span>
+            <h2 style={styles.cardValue}>{data.chunks_created}</h2>
+          </div>
+
+          <div style={styles.card}>
+            <span style={styles.cardLabel}>Integrations</span>
+            <h2 style={styles.cardValue}>4</h2>
+          </div>
+
+          <div style={styles.card}>
+            <span style={styles.cardLabel}>Status</span>
+            <h2 style={{ ...styles.cardValue, color: "#16a34a" }}>
+              {data.status.toUpperCase()}
+            </h2>
           </div>
         </div>
-      </section>
 
-      {/* Workspace Summary */}
-      <section style={styles.section}>
-        <h2>Workspace Summary</h2>
-        <div style={styles.grid}>
-          <div style={styles.card}>
-            <h3>Synced Documents</h3>
-            <p style={styles.stat}>{data.documents_synced}</p>
-          </div>
-          <div style={styles.card}>
-            <h3>Knowledge Chunks</h3>
-            <p style={styles.stat}>{data.chunks_created}</p>
-          </div>
-          <div style={styles.card}>
-            <h3>API Status</h3>
-            <p style={{ ...styles.stat, color: "green" }}>{data.status.toUpperCase()}</p>
+        {/* Recent Activity List */}
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Recent Activity</h2>
+          <div style={styles.activityList}>
+            <div style={styles.activityItem}>
+              <span style={styles.activityDot} />
+              <span style={styles.activityText}>Gmail synced successfully</span>
+            </div>
+            <div style={styles.activityItem}>
+              <span style={styles.activityDot} />
+              <span style={styles.activityText}>Calendar updated</span>
+            </div>
+            <div style={styles.activityItem}>
+              <span style={styles.activityDot} />
+              <span style={styles.activityText}>Drive indexed successfully</span>
+            </div>
+            <div style={{ ...styles.activityItem, borderBottom: "none" }}>
+              <span style={styles.activityDot} />
+              <span style={styles.activityText}>Google Sheets processed 339 rows</span>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Workspace Activity / Langgraph State */}
-      <section style={styles.section}>
-        <h2>Latest Integration Details</h2>
-        <div style={styles.detailsList}>
-          <div style={styles.detailItem}>
-            <strong>Latest Email:</strong>
-            <p>{data.latest_email}</p>
+        {/* Integrations Grid */}
+        <div style={styles.integrationGrid}>
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <span style={styles.badgeGmail}>Gmail</span>
+              <span style={styles.panelLabel}>Latest Email</span>
+            </div>
+            <p style={styles.panelContent}>
+              {data.latest_email || "No recent email found"}
+            </p>
           </div>
-          <div style={styles.detailItem}>
-            <strong>Latest Calendar Event:</strong>
-            <p>{data.latest_calendar}</p>
+
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <span style={styles.badgeCalendar}>Calendar</span>
+              <span style={styles.panelLabel}>Latest Calendar Event</span>
+            </div>
+            <p style={styles.panelContent}>
+              {data.latest_calendar || "No upcoming events"}
+            </p>
           </div>
-          <div style={styles.detailItem}>
-            <strong>Latest Drive File:</strong>
-            <p>{data.latest_drive}</p>
+
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <span style={styles.badgeDrive}>Drive</span>
+              <span style={styles.panelLabel}>Latest Drive File</span>
+            </div>
+            <p style={styles.panelContent}>
+              {data.latest_drive || "No recent drive file"}
+            </p>
           </div>
-          <div style={styles.detailItem}>
-            <strong>Latest Sheets Data:</strong>
-            <p>{data.latest_sheets}</p>
+
+          <div style={styles.panel}>
+            <div style={styles.panelHeader}>
+              <span style={styles.badgeSheets}>Sheets</span>
+              <span style={styles.panelLabel}>Latest Sheets Data</span>
+            </div>
+            <p style={styles.panelContent}>
+              {data.latest_sheets || "No sheet data found"}
+            </p>
           </div>
         </div>
-      </section>
 
-      {/* System Responses */}
-      <footer style={styles.footerSection}>
-        <strong>System Message:</strong>
-        <p>{data.response_msg}</p>
-      </footer>
-    </main>
+        {/* System Message Banner */}
+        {data.response_msg && (
+          <div style={styles.systemBanner}>
+            <strong style={{ color: "#1e40af", display: "block", marginBottom: "4px" }}>
+              System Status Message:
+            </strong>
+            <p style={{ margin: 0, color: "#1e3a8a", fontSize: "14px" }}>
+              {data.response_msg}
+            </p>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
 
-// Basic Styles
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
   container: {
-    maxWidth: "900px",
-    margin: "0 auto",
-    padding: "2rem",
-    fontFamily: "system-ui, sans-serif",
-    color: "#333",
+    display: "flex",
+    minHeight: "100vh",
+    backgroundColor: "#f8fafc",
+    color: "#0f172a",
+    fontFamily:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  },
+  main: {
+    flex: 1,
+    padding: "32px 40px",
+    maxWidth: "1200px",
+  },
+  centerMsg: {
+    height: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottom: "1px solid #eaeaea",
-    paddingBottom: "1rem",
-    marginBottom: "2rem",
+    marginBottom: "32px",
   },
-  logoutButton: {
-    padding: "0.5rem 1rem",
-    backgroundColor: "#ff4d4f",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
+  headerTitle: {
+    fontSize: "28px",
+    fontWeight: 700,
+    color: "#0f172a",
+    margin: "0 0 4px 0",
+    letterSpacing: "-0.02em",
   },
-  section: {
-    marginBottom: "2rem",
+  headerSubtitle: {
+    margin: 0,
+    fontSize: "14px",
+    color: "#475569",
   },
-  profileBox: {
+  headerRight: {
     display: "flex",
-    gap: "1rem",
     alignItems: "center",
-    padding: "1rem",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "6px",
+    gap: "16px",
   },
-  avatar: {
-    width: "60px",
-    height: "60px",
+  statusBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    backgroundColor: "#f0fdf4",
+    color: "#16a34a",
+    padding: "6px 12px",
+    borderRadius: "20px",
+    fontSize: "12px",
+    fontWeight: 700,
+    border: "1px solid #bbf7d0",
+  },
+  statusDot: {
+    width: "6px",
+    height: "6px",
     borderRadius: "50%",
+    backgroundColor: "#16a34a",
   },
-  grid: {
+  cardsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "1rem",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "16px",
+    marginBottom: "28px",
   },
   card: {
-    padding: "1rem",
-    border: "1px solid #eaeaea",
-    borderRadius: "6px",
-    textAlign: "center" as const,
+    backgroundColor: "#ffffff",
+    padding: "20px",
+    borderRadius: "12px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
   },
-  stat: {
-    fontSize: "1.5rem",
-    fontWeight: "bold",
-    margin: "0.5rem 0 0 0",
+  cardLabel: {
+    fontSize: "13px",
+    fontWeight: 600,
+    color: "#475569",
+    display: "block",
+    marginBottom: "8px",
   },
-  detailsList: {
+  cardValue: {
+    fontSize: "30px",
+    fontWeight: 700,
+    color: "#0f172a",
+    margin: 0,
+    letterSpacing: "-0.02em",
+  },
+  section: {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "12px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+    marginBottom: "28px",
+  },
+  sectionTitle: {
+    fontSize: "18px",
+    fontWeight: 700,
+    color: "#0f172a",
+    margin: "0 0 16px 0",
+  },
+  activityList: {
     display: "flex",
-    flexDirection: "column" as const,
-    gap: "1rem",
+    flexDirection: "column",
   },
-  detailItem: {
-    padding: "1rem",
-    borderLeft: "4px solid #0070f3",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "0 6px 6px 0",
+  activityItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "12px 0",
+    borderBottom: "1px solid #f1f5f9",
   },
-  footerSection: {
-    marginTop: "3rem",
-    padding: "1rem",
-    backgroundColor: "#e6f7ff",
-    border: "1px solid #91d5ff",
+  activityDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "50%",
+    backgroundColor: "#2563eb",
+  },
+  activityText: {
+    fontSize: "14px",
+    fontWeight: 500,
+    color: "#1e293b",
+  },
+  integrationGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "16px",
+    marginBottom: "28px",
+  },
+  panel: {
+    backgroundColor: "#ffffff",
+    padding: "20px",
+    borderRadius: "12px",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
+  },
+  panelHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginBottom: "12px",
+  },
+  panelLabel: {
+    fontSize: "13px",
+    fontWeight: 600,
+    color: "#475569",
+  },
+  panelContent: {
+    fontSize: "16px",
+    fontWeight: 600,
+    color: "#0f172a",
+    margin: 0,
+    wordBreak: "break-word",
+    lineHeight: "1.4",
+  },
+  badgeGmail: {
+    backgroundColor: "#eff6ff",
+    color: "#2563eb",
+    fontSize: "11px",
+    fontWeight: 700,
+    padding: "3px 8px",
     borderRadius: "6px",
+    textTransform: "uppercase",
   },
-  message: {
-    textAlign: "center" as const,
-    padding: "3rem",
-    fontSize: "1.2rem",
+  badgeCalendar: {
+    backgroundColor: "#f0fdf4",
+    color: "#16a34a",
+    fontSize: "11px",
+    fontWeight: 700,
+    padding: "3px 8px",
+    borderRadius: "6px",
+    textTransform: "uppercase",
   },
-  error: {
-    textAlign: "center" as const,
-    padding: "3rem",
-    color: "#ff4d4f",
-    fontSize: "1.2rem",
+  badgeDrive: {
+    backgroundColor: "#faf5ff",
+    color: "#9333ea",
+    fontSize: "11px",
+    fontWeight: 700,
+    padding: "3px 8px",
+    borderRadius: "6px",
+    textTransform: "uppercase",
+  },
+  badgeSheets: {
+    backgroundColor: "#fffbeb",
+    color: "#d97706",
+    fontSize: "11px",
+    fontWeight: 700,
+    padding: "3px 8px",
+    borderRadius: "6px",
+    textTransform: "uppercase",
+  },
+  systemBanner: {
+    backgroundColor: "#eff6ff",
+    border: "1px solid #bfdbfe",
+    borderRadius: "10px",
+    padding: "16px",
   },
 };
