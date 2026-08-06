@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 const API_BASE = "http://localhost:8000";
 
 interface SummaryResponse {
-  response: string;
+  status: string;
+  summary: string;
 }
 
 export default function SummaryPage() {
@@ -19,19 +20,22 @@ export default function SummaryPage() {
       setError("");
 
       const res = await fetch(`${API_BASE}/api/summary`, {
+        method: "GET",
         credentials: "include",
       });
 
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Status:", res.status);
+        console.error("Response:", text);
+        throw new Error(`Failed: ${res.status}`);
+      }
 
-if (!res.ok) {
-    const text = await res.text();
-    console.log(res.status);
-    console.log(text);
-    throw new Error(`Failed: ${res.status}`);
-}
       const data: SummaryResponse = await res.json();
-      console.log("Summary response:", data.response);
-      setSummary(data.response);
+
+      console.log("Backend response:", data);
+
+      setSummary(data.summary);
     } catch (err) {
       console.error(err);
       setError("Unable to load enterprise summary.");
@@ -73,7 +77,7 @@ if (!res.ok) {
         )}
 
         {!loading && !error && (
-          <div className="whitespace-pre-wrap rounded-lg border bg-gray-50 p-6 leading-8 text-gray-800">
+          <div className="whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-6 leading-8 text-gray-800">
             {summary}
           </div>
         )}
