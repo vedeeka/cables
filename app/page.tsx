@@ -474,8 +474,8 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      console.log("Checking enterprise session at:", `${API_BASE}/api/me`);
-      const res = await fetch(`${API_BASE}/api/me`, {
+      console.log("Checking enterprise session at:", `${API_BASE}/api/v1/auth/me`);
+      const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
         credentials: "include",
       });
 
@@ -486,11 +486,11 @@ export default function Home() {
         window.location.href = "/dashboard";
       } else {
         console.log("Not Authenticated. Redirecting to Enterprise SSO / Google Login...");
-        window.location.href = `${API_BASE}/login`;
+        window.location.href = `${API_BASE}/api/v1/auth/login`;
       }
     } catch (err) {
       console.error("Session check failed or backend unreachable:", err);
-      window.location.href = `${API_BASE}/login`;
+      window.location.href = `${API_BASE}/api/v1/auth/login`;
     }
   };
 

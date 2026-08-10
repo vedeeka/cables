@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../../components/Sidebar";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
@@ -158,10 +158,6 @@ export default function Dashboard() {
   return (
     <div className="dc-shell">
       <GlobalStyles />
-
-      <div className="dc-sidebar-wrap">
-        <Sidebar user={data.user} onLogout={logout} />
-      </div>
 
       <main className="dc-main">
         {/* Ambient background accents */}
@@ -351,7 +347,8 @@ function GlobalStyles() {
 
       .dc-shell {
         display: flex;
-        min-height: 100vh;
+        height: 100%;
+        width: 100%;
         background: #ffffff;
         color: #0f172a;
         font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
@@ -622,7 +619,7 @@ function GlobalStyles() {
 
       /* Loading state */
       .dc-loading-wrap {
-        height: 100vh; width: 100%;
+        height: 100%; width: 100%;
         display: flex; align-items: center; justify-content: center;
         background: #ffffff;
       }
