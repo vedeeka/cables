@@ -1,5 +1,5 @@
 "use client";
-import Sidebar from "../../components/Sidebar";
+
 import { useEffect, useRef, useState } from "react";
 
 const API_BASE = "http://localhost:8000";

@@ -1,17 +1,21 @@
 import Link from 'next/link';
-import { Home, Network, Database, Settings, ShieldAlert, LogOut } from 'lucide-react';
+import { Home, Network, Database, Settings, ShieldAlert, LogOut, Sparkles } from 'lucide-react';
 
 export default function Sidebar() {
   return (
     <div className="w-64 h-full bg-card backdrop-blur-md border-r border-border flex flex-col pt-6 z-10">
       <div className="px-6 pb-6 border-b border-border mb-4">
         <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          Enterprise AI OS
+          Enterprise OS
         </h1>
         <p className="text-xs text-muted-foreground mt-1">Intelligence Layer</p>
       </div>
       
       <nav className="flex-1 px-4 space-y-2">
+        <Link href="/aeryn" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-sm font-bold transition-colors text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+          <Sparkles size={18} className="text-indigo-500 dark:text-indigo-400" />
+          Aeryn Chat
+        </Link>
         <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 text-sm font-medium transition-colors">
           <Home size={18} className="text-blue-400" />
           AI Workspace
